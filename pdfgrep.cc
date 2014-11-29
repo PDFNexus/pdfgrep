@@ -33,6 +33,7 @@
 #include <fnmatch.h>
 #include <errno.h>
 #include <dirent.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <limits.h>
 
@@ -52,6 +53,7 @@
 
 #include "output.h"
 #include "exclude.h"
+#include "queue.h"
 
 /* set this to 1 if any match was found. Used for the exit status */
 int found_something = 0;
@@ -71,6 +73,14 @@ int pagecount = 0;
 int quiet = 0;
 char *password = (char*)"";
 int max_count = 0;
+static volatile int all_directories_searched = 0;
+static int const WAIT_FOR_FILES = 2;
+#ifdef linux
+	static int const THREADS = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+	static int const THREADS = 4;
+#endif
+	
 
 #ifdef HAVE_UNAC
 int use_unac = 0;
@@ -434,7 +444,8 @@ int do_search_in_document(const std::string path, const std::string filename,
 	return 0;
 }
 
-int do_search_in_directory(const std::string filename, regex_t *ptrRegex)
+int do_search_in_directory(const std::string filename, regex_t *ptrRegex,
+							struct Queue* queue)
 {
 	DIR *ptrDir = NULL;
 	struct dirent *ptrDirent = NULL;
@@ -475,10 +486,12 @@ int do_search_in_directory(const std::string filename, regex_t *ptrRegex)
 			continue;
 
 		if (S_ISDIR(st.st_mode)) {
-			do_search_in_directory(path, ptrRegex);
+			do_search_in_directory(path, ptrRegex, queue);
 		} else {
-			do_search_in_document(path, ptrDirent->d_name, ptrRegex);
+			if (enqueue(queue, strdup(path.c_str())) == 0)
+				exit(EXIT_FAILURE);
 		}
+		all_directories_searched = 1;
 	}
 
 	closedir(ptrDir);
@@ -498,6 +511,43 @@ bool parse_int(const char *str, int *i)
 
 	*i = d;
 	return true;
+}
+
+struct Thread_argument 
+{
+	struct Queue* queue;
+	regex_t* regex;
+};
+
+char* getfilename(char* path)
+{
+	return strrchr(path, '/') + 1;
+}
+
+static void* thread_document_processing(void* ta)
+{
+	struct Thread_argument* thread_argument = (struct Thread_argument*)ta;
+	struct Queue* queue = thread_argument->queue;
+	char* path;
+	while (1)
+	{
+		path = NULL;
+		if (dequeue(queue, &path))
+		{
+			char* filename = getfilename(path);
+			if (filename == NULL)
+				filename = path;
+			do_search_in_document(path, filename, thread_argument->regex);
+			free(path);
+		}
+		else
+		{
+			if (all_directories_searched == 1)
+				break;
+			sleep(WAIT_FOR_FILES);
+		}
+	}
+	return NULL;
 }
 
 int main(int argc, char** argv)
@@ -651,21 +701,47 @@ int main(int argc, char** argv)
 
 	error = 0;
 
+	struct Queue* queue;
+	pthread_t threads_array[THREADS];
+	struct Thread_argument* ta;
+
+	if (f_recursive_search)
+	{
+		queue = Queue_create();
+		if (!queue)
+			exit(EXIT_FAILURE);
+		struct Thread_argument* ta = (struct Thread_argument*)malloc(sizeof(struct Thread_argument));
+		if (!ta)
+			exit(EXIT_FAILURE);
+		ta->queue = queue;
+		ta->regex = &regex;
+
+		for (int i = 0; i < THREADS; ++i)
+		{
+			if(pthread_create(&(threads_array[i]), NULL, thread_document_processing, (void*)ta) != 0)
+				exit(EXIT_FAILURE);
+		}
+	}
+
 	for (int i = optind; i < argc; i++) {
 		const std::string filename(argv[i]);
 
 		if (!is_dir(filename)) {
 			do_search_in_document(filename, filename, &regex,false);
 		} else if (f_recursive_search) {
-			do_search_in_directory(filename, &regex);
+			do_search_in_directory(filename, &regex, queue);
 		} else { // TODO: report errors
 			error = 1;
 		}
 	}
 
 	if (argc == optind && f_recursive_search) {
-		do_search_in_directory(".", &regex);
+		do_search_in_directory(".", &regex, queue);
 	}
+
+	if (f_recursive_search)
+		for ( int i = 0; i < THREADS; ++i )
+			pthread_join(threads_array[i], NULL);
 
 	if (error) {
 		exit(2);
