@@ -98,8 +98,11 @@ int search_document(const Options &opts, unique_ptr<poppler::document> doc,
 				cache->set_page(pagenum, text);
 		}
 
-		int page_count = search_page(opts, text, pagenum,
-		                             filename, re, state);
+		int page_count;
+		if (!state.document_empty) {
+			page_count = search_page(opts, text, pagenum,
+		                             	filename, re, state);
+		}
 
 		if (page_count > 0 && opts.pagecount && !opts.quiet) {
 			line_prefix(opts.outconf, filename, false, pagenum) << page_count << endl;
