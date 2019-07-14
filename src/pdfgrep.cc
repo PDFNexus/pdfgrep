@@ -548,7 +548,7 @@ int main(int argc, char** argv)
 				explicit_filename_option = true;
 				break;
 			case 'i':
-				options.ignore_case = CaseSensitivity::SENSITIVE;
+				options.ignore_case = CaseSensitivity::INSENSITIVE;
 				break;
 			case SMART_CASE_OPTION:
 				options.ignore_case = CaseSensitivity::SMART;
