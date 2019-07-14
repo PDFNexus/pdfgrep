@@ -85,6 +85,61 @@ pdfgrep_expect -Pi "foobar" $pdf \
 
 ######################################################################
 
+clear_pdfdir
+
+set test "Smart case"
+
+set pdf [mkpdf icase "FoObAr"]
+
+pdfgrep_expect --smart-case "foobar" $pdf \
+    "FoObAr"
+
+pdfgrep_expect --smart-case "FoObAr" $pdf \
+    "FoObAr"
+
+pdfgrep_expect --smart-case "Foobar" $pdf \
+    ""
+
+expect_exit_status 1
+
+set test "Smart case -- PCRE"
+
+pdfgrep_expect -P --smart-case "foobar" $pdf \
+    "FoObAr"
+
+pdfgrep_expect -P --smart-case "FoObAr" $pdf \
+    "FoObAr"
+
+pdfgrep_expect -P --smart-case "Foobar" $pdf \
+    ""
+
+expect_exit_status 1
+
+set test "Smart case -- fixed string"
+
+pdfgrep_expect -F --smart-case "foobar" $pdf \
+    "FoObAr"
+
+pdfgrep_expect -F --smart-case "FoObAr" $pdf \
+    "FoObAr"
+
+pdfgrep_expect -F --smart-case "Foobar" $pdf \
+    ""
+
+expect_exit_status 1
+
+set test "Smart case -- fixed string multiple"
+
+pdfgrep_expect -F --smart-case "foobar\nBAZ" $pdf \
+    "FoObAr"
+
+pdfgrep_expect -F --smart-case "Foobar\nbaz" $pdf \
+    ""
+
+expect_exit_status 1
+
+######################################################################
+
 set test "Multiple fixed strings"
 
 clear_pdfdir
