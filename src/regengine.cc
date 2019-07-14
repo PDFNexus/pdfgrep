@@ -238,5 +238,5 @@ bool FixedString::exec(const std::string& str, size_t offset, struct match& m) c
 }
 
 bool FixedString::has_uppercase_literals(const std::string& pattern) {
-	return std::all_of(pattern.begin(), pattern.end(), [](char c) { return std::isupper(c); });
+	return std::any_of(pattern.begin(), pattern.end(), [](char c) { return std::isupper(c); });
 }
