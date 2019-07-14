@@ -91,7 +91,7 @@ int search_document(const Options &opts, unique_ptr<poppler::document> doc,
 		}
 
 		CachePage cachepage;
-		
+
 		if (!opts.use_cache || !cache->get_page(pagenum, cachepage)) {
 			unique_ptr<poppler::page> page(doc->create_page(pagenum-1));
 

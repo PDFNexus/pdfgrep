@@ -35,6 +35,7 @@
 
 
 struct match;
+enum class CaseSensitivity;
 
 class Regengine
 {
@@ -63,33 +64,36 @@ private:
 class PosixRegex : public Regengine
 {
 public:
-	PosixRegex(const std::string &pattern, bool case_insensitive);
+	PosixRegex(const std::string &pattern, CaseSensitivity case_folding);
 	~PosixRegex();
 	bool exec(const std::string &str, size_t offset, struct match &m) const override;
 private:
 	regex_t regex;
+	static bool has_uppercase_literals(const std::string &pattern);
 };
 
 #ifdef HAVE_LIBPCRE
 class PCRERegex : public Regengine
 {
 public:
-	PCRERegex(const std::string &pattern, bool case_insensitive);
+	PCRERegex(const std::string &pattern, CaseSensitivity case_folding);
 	~PCRERegex();
 	bool exec(const std::string &str, size_t offset, struct match &m) const override;
 private:
 	pcre *regex;
+	static bool has_uppercase_literals(const std::string &pattern);
 };
 #endif
 
 class FixedString : public Regengine
 {
 public:
-	FixedString(const std::string &pattern, bool case_insensitive);
+	FixedString(const std::string &pattern, CaseSensitivity case_folding);
 	bool exec(const std::string &str, size_t offset, struct match &m) const override;
 private:
 	std::vector<std::string> patterns;
-	bool case_insensitive;
+	CaseSensitivity case_folding;
+	static bool has_uppercase_literals(const std::string &pattern);
 };
 
 #endif /* REGENGINE_H */
