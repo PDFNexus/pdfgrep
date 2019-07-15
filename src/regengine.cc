@@ -52,11 +52,17 @@ void PatternList::add_pattern(std::unique_ptr<Regengine> pattern) {
 }
 
 // Shamelessly stolen from ripgrep!
+//
+// This implementation is a compromise. It successfully ignores escape sequences
+// such as '\S', but fails to ignore things like '\p{Ll}'.
 static bool regex_has_uppercase_literals(const std::string& pattern) {
-	// TODO Find if C++ offers something to walk trough unicode characters
-	// TODO Find if C++ offers something to check character classes
 	bool escaped = false;
 
+	// FIXME This iterates trough bytes in an UTF-8 string, so 'isupper'
+	// will work only for the most simple cases.
+	//
+	// C++ doesn't provide sensible unicode primitives for such tasks, so we
+	// should finally start to use ICU.
 	for (char c : pattern) {
 		if (escaped) {
 			escaped = false;
@@ -238,5 +244,6 @@ bool FixedString::exec(const std::string& str, size_t offset, struct match& m) c
 }
 
 bool FixedString::has_uppercase_literals(const std::string& pattern) {
+	// FIXME: As above: This won't work with anything outside of ASCII.
 	return std::any_of(pattern.begin(), pattern.end(), [](char c) { return std::isupper(c); });
 }
