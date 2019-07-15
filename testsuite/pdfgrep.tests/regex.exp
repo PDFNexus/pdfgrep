@@ -149,11 +149,11 @@ expect_exit_status 1
 #
 #set pdf [mkpdf icase "Apple $\\pi$"]
 #
-#pdfgrep_expect_x --smart-case "apple π" $pdf \
+#pdfgrep_expect --smart-case "apple π" $pdf \
 #    "Apple π"
 #
-#pdfgrep_expect_x --smart-case "apple Π" $pdf ""
-#expect_exit_status_x 1
+#pdfgrep_expect --smart-case "apple Π" $pdf ""
+#expect_exit_status 1
 
 
 ######################################################################
