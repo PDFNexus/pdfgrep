@@ -96,10 +96,8 @@ int search_document(const Options &opts, unique_ptr<poppler::document> doc,
 			unique_ptr<poppler::page> page(doc->create_page(pagenum-1));
 
 			if (!page) {
-				if (!opts.quiet) {
-					err() << "Could not search in page " << pagenum
-					      << " of " << filename << endl;
-				}
+				err() << "Could not search in page " << pagenum << " of "
+				      << filename << endl;
 				continue;
 			}
 
