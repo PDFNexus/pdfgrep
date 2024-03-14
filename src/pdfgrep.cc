@@ -82,12 +82,14 @@ enum {
 	CACHE_OPTION,
 	PAGE_RANGE_OPTION,
 	PAGENUM_OPTION,
+	SMART_CASE_OPTION,
 };
 
 struct option long_options[] =
 {
 	// name, has_arg, *flag, val
 	{"ignore-case", no_argument, nullptr, 'i'},
+	{"smart-case", no_argument, nullptr, SMART_CASE_OPTION},
 	{"perl-regexp", no_argument, nullptr, 'P'},
 	{"page-number", optional_argument, nullptr, PAGENUM_OPTION},
 	{"with-filename", no_argument, nullptr, 'H'},
@@ -546,7 +548,10 @@ int main(int argc, char** argv)
 				explicit_filename_option = true;
 				break;
 			case 'i':
-				options.ignore_case = true;
+				options.ignore_case = CaseSensitivity::INSENSITIVE;
+				break;
+			case SMART_CASE_OPTION:
+				options.ignore_case = CaseSensitivity::SMART;
 				break;
 			case 'c':
 				options.count = true;

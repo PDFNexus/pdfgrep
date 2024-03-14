@@ -77,8 +77,14 @@ enum class OnlyFilenames {
 	WITHOUT_MATCH
 };
 
+enum class CaseSensitivity {
+	INSENSITIVE,
+	SENSITIVE,
+	SMART,
+};
+
 struct Options {
-	bool ignore_case = false;
+	CaseSensitivity ignore_case = CaseSensitivity::SENSITIVE;
 	Recursion recursive = Recursion::NONE;
 	bool count = false;
 	bool pagecount = false;
