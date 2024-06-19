@@ -497,7 +497,7 @@ int main(int argc, char** argv)
 		COLOR_NEVER
 	} use_colors = COLOR_AUTO;
 
-	// patterns specified with --regex or --file
+	// patterns specified with --regexp or --file
 	vector<string> patterns;
 	bool patterns_specified = false;
 
