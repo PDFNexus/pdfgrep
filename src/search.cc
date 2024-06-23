@@ -97,10 +97,8 @@ int search_document(const Options &opts, unique_ptr<poppler::document> doc,
 			unique_ptr<poppler::page> page(doc->create_page(pagenum-1));
 
 			if (!page) {
-				if (!opts.quiet) {
-					err() << "Could not search in page " << pagenum
-					      << " of " << filename << endl;
-				}
+				err() << "Could not search in page " << pagenum << " of "
+				      << filename << endl;
 				continue;
 			}
 
@@ -144,19 +142,18 @@ int search_document(const Options &opts, unique_ptr<poppler::document> doc,
 
 		int page_count = search_page(opts, text, pagenum, label, filename, re, state);
 
-		if (page_count > 0 && opts.quiet) {
+		if ((opts.quiet || opts.only_filenames == OnlyFilenames::WITHOUT_MATCH)
+		    && page_count > 0) {
 			break;
 		}
 
 		if (opts.only_filenames == OnlyFilenames::WITH_MATCHES
 		    && page_count > 0) {
-			if (!opts.quiet) {
-				print_only_filename(opts.outconf, filename);
-			}
+			print_only_filename(opts.outconf, filename);
 			break;
 		}
-		if (page_count > 0 && opts.pagecount &&
-		    opts.only_filenames == OnlyFilenames::NOPE && !opts.quiet) {
+
+		if (page_count > 0 && opts.pagecount) {
 			line_prefix(context { filename, pagenum, label, opts.outconf }, false)
 				<< page_count << endl;
 		}
@@ -219,7 +216,7 @@ static int search_page(const Options& opts,
 		state.total_count++;
 		page_count++;
 
-		if (opts.quiet || opts.only_filenames == OnlyFilenames::WITH_MATCHES) {
+		if (opts.quiet || opts.only_filenames != OnlyFilenames::NOPE) {
 			return page_count;
 		}
 
