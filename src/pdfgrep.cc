@@ -481,7 +481,7 @@ int main(int argc, char** argv)
 	}
 
     // NOTE: used for bitmask during option parsing operation
-    // define new variables powers of 2.
+    // define new variables in powers of 2.
 	enum re_engine_type {
 		RE_POSIX = 0b00,
 		RE_PCRE = 0b01,
