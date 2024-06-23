@@ -475,10 +475,12 @@ int main(int argc, char** argv)
 		      << "\". Falling back to default" << endl;
 	}
 
+    // NOTE: used for bitmask during option parsing operation
+    // define new variables in powers of 2.
 	enum re_engine_type {
-		RE_POSIX = 0,
-		RE_PCRE = 1,
-		RE_FIXED = 2
+		RE_POSIX = 0b00,
+		RE_PCRE = 0b01,
+		RE_FIXED = 0b10
 	};
 
 	int re_engine = RE_POSIX;
